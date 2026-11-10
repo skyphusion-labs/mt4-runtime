@@ -58,6 +58,8 @@ if [ "$size" -lt 100000 ]; then
   echo "installer download is too small" >&2
   exit 1
 fi
+actual=$(sha256sum "$installer" | awk '{print $1}')
+python3 -m mt4runtime verify-sha --url "$URL" --actual "$actual" --override "${MT4_SETUP_SHA256:-}"
 
 log="${HOME:-/tmp}/log/install.log"
 : >"$log"
