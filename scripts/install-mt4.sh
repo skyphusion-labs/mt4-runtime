@@ -91,14 +91,19 @@ nudge() {
   fi
   echo "click $id" >&2
   xdotool getwindowname "$id" >&2 || true
-  xwininfo -id "$id" -children >&2 || true
+  if [ ! -f "${HOME:-/tmp}/setup-ocr.done" ]; then
+    if import -window "$id" "${HOME:-/tmp}/setup.png" >/dev/null 2>&1; then
+      tesseract "${HOME:-/tmp}/setup.png" stdout --psm 6 >&2 || true
+    fi
+    : >"${HOME:-/tmp}/setup-ocr.done"
+  fi
   timeout 5 xdotool windowactivate "$id" key --window "$id" alt+n >/dev/null 2>&1 || true
   timeout 5 xdotool mousemove --window "$id" 250 80 click --window "$id" 1 >/dev/null 2>&1 || true
 }
 
 i=0
 found=""
-while [ "$i" -lt 160 ]; do
+while [ "$i" -lt 40 ]; do
   found=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" 2>/dev/null || true)
   if [ -n "$found" ]; then
     break

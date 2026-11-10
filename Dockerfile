@@ -32,6 +32,8 @@ RUN apt-get update \
         tini \
         xdotool \
         openbox \
+        imagemagick \
+        tesseract-ocr \
         fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
