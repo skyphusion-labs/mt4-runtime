@@ -54,11 +54,27 @@ def test_cloudflared_pin_is_a_sha256():
     ) in dockerfile
 
 
-def test_compose_lifts_seccomp_for_wine():
+def test_seccomp_profile_allows_what_wine_needs():
+    import json
+
     compose = (ROOT / "docker-compose.yml").read_text()
     workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text()
-    assert "seccomp:unconfined" in compose
-    assert "seccomp=unconfined" in workflow
+    assert "seccomp/wine.json" in compose
+    assert "seccomp=seccomp/wine.json" in workflow
+    assert "unconfined" not in compose
+    assert "unconfined" not in workflow
+    profile = json.loads((ROOT / "seccomp" / "wine.json").read_text())
+    assert profile["defaultAction"] == "SCMP_ACT_ERRNO"
+    clone3 = [item for item in profile["syscalls"] if item.get("names") == ["clone3"]]
+    assert clone3 and clone3[0]["action"] == "SCMP_ACT_ALLOW"
+    assert "errnoRet" not in clone3[0]
+    af_alg = [
+        item
+        for item in profile["syscalls"]
+        if item.get("names") == ["socket"]
+        and any(arg.get("value") == 38 for arg in item.get("args") or [])
+    ]
+    assert af_alg and af_alg[0]["action"] == "SCMP_ACT_ALLOW"
 
 
 def test_default_installer_sha256_is_pinned():

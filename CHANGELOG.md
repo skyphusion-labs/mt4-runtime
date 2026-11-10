@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.5
+
+`seccomp/wine.json` replaces `seccomp=unconfined`. The file is Docker's
+default profile with two changes: `clone3` is allowed, and `socket` is
+allowed for `AF_ALG` (address family 38). The default returns ENOSYS for
+`clone3` and omits that address family. Wine exits on that with
+`wine: socket : Function not implemented`.
+
 ## 0.1.4
 
 Python 3.12, venv, pip, and git are installed so a desk package that
