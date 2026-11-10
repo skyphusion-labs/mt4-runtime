@@ -5,8 +5,8 @@
 The current MetaQuotes setup file is a GUI installer. Inno Setup silent
 flags do not apply, so the run waited until the task timed out.
 The container now bounds Wine startup and drives the setup window.
-The installer treats a set WINEDEBUG as a debugger and refuses to run,
-so the setup is started with that variable unset.
+Wine 11 trips that installer's debugger check. The image pins
+WineHQ stable at 10.0.0.0.
 It looks for terminal.exe and terminal64.exe. Docker's default seccomp
 profile blocks Wine's server socket, so compose and CI lift it.
 

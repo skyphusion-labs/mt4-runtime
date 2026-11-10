@@ -42,7 +42,12 @@ RUN dpkg --add-architecture i386 \
     && wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key \
     && wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources \
     && apt-get update \
-    && apt-get install -y --install-recommends winehq-stable \
+    && apt-get install -y --install-recommends --allow-downgrades \
+        winehq-stable=10.0.0.0~noble-1 \
+        wine-stable=10.0.0.0~noble-1 \
+        wine-stable-amd64=10.0.0.0~noble-1 \
+        wine-stable-i386:i386=10.0.0.0~noble-1 \
+    && apt-mark hold winehq-stable wine-stable wine-stable-amd64 wine-stable-i386:i386 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL -o /tmp/cloudflared \
