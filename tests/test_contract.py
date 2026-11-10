@@ -37,6 +37,7 @@ def test_image_does_not_vendor_the_terminal():
     assert "winehq-stable" in dockerfile
     assert "cloudflared" in dockerfile
     assert "xdotool" in dockerfile
+    assert "openbox" in dockerfile
     for banned in ("mt4oldsetup", "mt4setup.exe", "terminal.exe", "mql5.com"):
         assert banned not in dockerfile
 

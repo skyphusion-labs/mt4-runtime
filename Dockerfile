@@ -31,6 +31,7 @@ RUN apt-get update \
         python3 \
         tini \
         xdotool \
+        openbox \
         fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 

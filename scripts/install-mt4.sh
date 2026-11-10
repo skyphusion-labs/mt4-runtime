@@ -91,10 +91,9 @@ nudge() {
   fi
   echo "click $id" >&2
   xdotool getwindowname "$id" >&2 || true
-  xwininfo -id "$id" >&2 || true
-  # Do not send Return. On this dialog it is the button that closes the setup.
-  xdotool windowactivate --sync "$id" >/dev/null 2>&1 || true
-  xdotool mousemove --window "$id" 250 80 click 1 >/dev/null 2>&1 || true
+  xwininfo -id "$id" -children >&2 || true
+  timeout 5 xdotool windowactivate "$id" key --window "$id" alt+n >/dev/null 2>&1 || true
+  timeout 5 xdotool mousemove --window "$id" 250 80 click --window "$id" 1 >/dev/null 2>&1 || true
 }
 
 i=0
