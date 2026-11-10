@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Unit tests
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pytest
+
+      - name: Build the image
+        run: docker build -t mt4-runtime:ci .
+
+      - name: Smoke test
+        run: docker run --rm --entrypoint /opt/mt4-runtime/scripts/smoke.sh mt4-runtime:ci
+
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Coverage
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pytest --cov=mt4runtime --cov-report=term-missing --cov-fail-under=100

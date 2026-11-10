@@ -1,0 +1,7 @@
+# Changelog
+
+## 0.1.0
+
+Initial image. Wine and cloudflared are installed at build time.
+MetaTrader 4 is downloaded by the operator at start and is not stored in
+the image.

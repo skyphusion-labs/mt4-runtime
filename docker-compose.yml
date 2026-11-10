@@ -1,0 +1,17 @@
+name: mt4-runtime
+
+services:
+  terminal:
+    build:
+      context: .
+    image: mt4-runtime:local
+    environment:
+      CLOUDFLARE_TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+      MT4_SETUP_URL: ${MT4_SETUP_URL:-}
+      MT4_ALLOW_UNLISTED_SETUP_HOST: ${MT4_ALLOW_UNLISTED_SETUP_HOST:-0}
+    volumes:
+      - mt4-prefix:/home/trader/.mt4
+    restart: unless-stopped
+
+volumes:
+  mt4-prefix:

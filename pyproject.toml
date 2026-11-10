@@ -1,0 +1,12 @@
+[project]
+name = "mt4-runtime"
+version = "0.1.0"
+description = "Policy helpers for the mt4-runtime image"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["mt4runtime"]
