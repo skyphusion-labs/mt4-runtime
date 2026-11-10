@@ -8,6 +8,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # 26.04 does not have a WineHQ suite yet, and its apt rejects the
+      # armored WineHQ key. Stay on 24.04 until both are solved.
+      - dependency-name: "ubuntu"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: pip
     directory: /
     schedule:

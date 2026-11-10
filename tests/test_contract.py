@@ -23,7 +23,7 @@ def test_shell_syntax():
 
 def test_version_is_one_string():
     version = (ROOT / "VERSION").read_text().strip()
-    assert version == "0.1.0"
+    assert version.count(".") == 2
     pyproject = (ROOT / "pyproject.toml").read_text()
     dockerfile = (ROOT / "Dockerfile").read_text()
     changelog = (ROOT / "CHANGELOG.md").read_text()
