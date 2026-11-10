@@ -39,6 +39,8 @@ def test_image_does_not_vendor_the_terminal():
     assert "xdotool" in dockerfile
     assert "10.0.0.0~noble-1" in dockerfile
     assert "openbox" in dockerfile
+    for required in ("python3.12", "python3.12-venv", "python3-pip", "git"):
+        assert required in dockerfile
     for banned in ("mt4oldsetup", "mt4setup.exe", "terminal.exe", "mql5.com"):
         assert banned not in dockerfile
 
