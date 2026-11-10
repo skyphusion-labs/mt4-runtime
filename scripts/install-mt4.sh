@@ -70,8 +70,10 @@ wineserver --wait >>"$log" 2>&1 || true
 timeout 20 wine reg add 'HKCU\Software\Wine' /v Version /t REG_SZ /d win10 /f >>"$log" 2>&1 || true
 
 # The MetaQuotes file is a GUI setup. Silent Inno flags are ignored and
-# the window waits forever. Drive the visible window until a terminal exists.
-wine "$installer" >>"$log" 2>&1 &
+# the window waits forever. A set WINEDEBUG makes this installer report
+# "a debugger has been found" and refuse to continue.
+# Drive the visible window until a terminal exists.
+env -u WINEDEBUG wine "$installer" >>"$log" 2>&1 &
 wine_pid=$!
 
 # The setup window title is the exe name, not "MetaTrader", until the
@@ -93,7 +95,14 @@ nudge() {
   xdotool getwindowname "$id" >&2 || true
   if [ ! -f "${HOME:-/tmp}/setup-ocr.done" ]; then
     if import -window "$id" "${HOME:-/tmp}/setup.png" >/dev/null 2>&1; then
-      tesseract "${HOME:-/tmp}/setup.png" stdout --psm 6 >&2 || true
+      text=$(tesseract "${HOME:-/tmp}/setup.png" stdout --psm 6 2>/dev/null || true)
+      printf '%s\n' "$text" >&2
+      case "$text" in
+        *[Dd]ebugger*)
+          echo "installer refused: debugger check" >&2
+          exit 1
+          ;;
+      esac
     fi
     : >"${HOME:-/tmp}/setup-ocr.done"
   fi
@@ -103,7 +112,7 @@ nudge() {
 
 i=0
 found=""
-while [ "$i" -lt 40 ]; do
+while [ "$i" -lt 160 ]; do
   found=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" 2>/dev/null || true)
   if [ -n "$found" ]; then
     break
