@@ -106,19 +106,6 @@ nudge() {
   fi
   echo "click $id" >&2
   xdotool getwindowname "$id" >&2 || true
-  if [ ! -f "${HOME:-/tmp}/setup-ocr.done" ]; then
-    if import -window "$id" "${HOME:-/tmp}/setup.png" >/dev/null 2>&1; then
-      text=$(tesseract "${HOME:-/tmp}/setup.png" stdout --psm 6 2>/dev/null || true)
-      printf '%s\n' "$text" >&2
-      case "$text" in
-        *[Dd]ebugger*)
-          echo "installer refused: debugger check" >&2
-          exit 1
-          ;;
-      esac
-    fi
-    : >"${HOME:-/tmp}/setup-ocr.done"
-  fi
   timeout 5 xdotool windowactivate "$id" key --window "$id" alt+n >/dev/null 2>&1 || true
   timeout 5 xdotool mousemove --window "$id" 250 80 click --window "$id" 1 >/dev/null 2>&1 || true
 }
