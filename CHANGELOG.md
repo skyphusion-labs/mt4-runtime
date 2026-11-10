@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4
+
+Python 3.12, venv, pip, and git are installed so a desk package that
+requires Python 3.12 can be installed into a virtualenv at runtime.
+That package is not in the image, and the MetaTrader5 Python package
+is not installed.
+
 ## 0.1.3
 
 The default installer download is checked against a sha256 pin, not

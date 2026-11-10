@@ -7,7 +7,10 @@ installer from MetaQuotes and runs it under Wine. You accept the MetaQuotes
 license by that install. Broker logins stay on the machine, not in this
 repository.
 
-The image is linux/amd64. Wine is pinned to 10.0 because Wine 11 makes
+The image is linux/amd64. Python 3.12, venv, pip, and git are
+installed so a desk package can be installed into a virtualenv at
+runtime. That package is not in this image. Wine is pinned to 10.0
+because Wine 11 makes
 the MetaQuotes installer report a debugger and stop. It publishes no
 ports. cloudflared starts only when
 `CLOUDFLARE_TUNNEL_TOKEN` is set, and it dials out.
