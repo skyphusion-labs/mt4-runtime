@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-ARG VERSION=0.1.1
+ARG VERSION=0.1.2
 ARG CLOUDFLARED_VERSION=2026.10.7
 ARG CLOUDFLARED_SHA256=1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872
 
@@ -30,6 +30,8 @@ RUN apt-get update \
         procps \
         python3 \
         tini \
+        xdotool \
+        openbox \
         fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,7 +40,12 @@ RUN dpkg --add-architecture i386 \
     && wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key \
     && wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources \
     && apt-get update \
-    && apt-get install -y --install-recommends winehq-stable \
+    && apt-get install -y --install-recommends --allow-downgrades \
+        winehq-stable=10.0.0.0~noble-1 \
+        wine-stable=10.0.0.0~noble-1 \
+        wine-stable-amd64=10.0.0.0~noble-1 \
+        wine-stable-i386:i386=10.0.0.0~noble-1 \
+    && apt-mark hold winehq-stable wine-stable wine-stable-amd64 wine-stable-i386:i386 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL -o /tmp/cloudflared \

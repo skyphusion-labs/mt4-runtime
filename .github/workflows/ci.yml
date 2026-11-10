@@ -36,6 +36,9 @@ jobs:
       - name: Smoke test
         run: docker run --rm --entrypoint /opt/mt4-runtime/scripts/smoke.sh mt4-runtime:ci
 
+      - name: Install the terminal
+        run: docker run --rm --security-opt seccomp=unconfined -e MT4_INSTALL_ONLY=1 mt4-runtime:ci
+
   coverage:
     name: coverage
     runs-on: ubuntu-latest

@@ -12,6 +12,7 @@ from mt4runtime.__main__ import main
 from mt4runtime.policy import (
     DEFAULT_SETUP_URL,
     SetupUrlError,
+    WrongTerminalError,
     find_terminal,
     validate_setup_url,
 )
@@ -86,6 +87,24 @@ def test_find_terminal_ignores_dosdevices_symlink(tmp_path: Path):
     assert "dosdevices" not in found
 
 
+def test_find_terminal_prefers_terminal_exe(tmp_path: Path):
+    folder = tmp_path / "MetaTrader 4"
+    folder.mkdir()
+    (folder / "terminal64.exe").write_bytes(b"64")
+    (folder / "terminal.exe").write_bytes(b"32")
+    assert find_terminal(str(tmp_path)).endswith("terminal.exe")
+
+
+def test_find_terminal_refuses_terminal64_only(tmp_path: Path):
+    folder = tmp_path / "MetaTrader 5"
+    folder.mkdir()
+    target = folder / "terminal64.exe"
+    target.write_bytes(b"64")
+    with pytest.raises(WrongTerminalError) as caught:
+        find_terminal(str(tmp_path))
+    assert caught.value.path == str(target)
+
+
 def test_find_terminal_missing(tmp_path: Path):
     assert find_terminal(str(tmp_path)) is None
     assert find_terminal("") is None
@@ -100,6 +119,14 @@ def test_cli_validate_and_find(tmp_path: Path):
     assert main(["validate-url", "--url", "http://download.mql5.com/a.exe"]) == 2
     assert main(["find-terminal", "--prefix", str(tmp_path)]) == 0
     assert main(["find-terminal", "--prefix", str(tmp_path / "nope")]) == 1
+
+
+def test_cli_refuses_terminal64(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
+    folder = tmp_path / "MetaTrader 5"
+    folder.mkdir()
+    (folder / "terminal64.exe").write_bytes(b"64")
+    assert main(["find-terminal", "--prefix", str(tmp_path)]) == 3
+    assert "terminal64.exe" in capsys.readouterr().err
 
 
 def test_cli_requires_a_command():

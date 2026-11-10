@@ -6,7 +6,12 @@ from __future__ import annotations
 import argparse
 import sys
 
-from mt4runtime.policy import SetupUrlError, find_terminal, validate_setup_url
+from mt4runtime.policy import (
+    SetupUrlError,
+    WrongTerminalError,
+    find_terminal,
+    validate_setup_url,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -29,7 +34,11 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         return 0
 
-    path = find_terminal(args.prefix)
+    try:
+        path = find_terminal(args.prefix)
+    except WrongTerminalError as exc:
+        print(f"refusing {exc.path}", file=sys.stderr)
+        return 3
     if path is None:
         print("terminal.exe not found", file=sys.stderr)
         return 1

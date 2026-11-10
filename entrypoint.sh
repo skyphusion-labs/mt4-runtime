@@ -36,6 +36,11 @@ if [ "$ready" -ne 1 ]; then
   exit 1
 fi
 
+# Wine dialogs do not take clicks on a bare Xvfb. A window manager has to
+# own the display first.
+openbox >"$HOME/log/openbox.log" 2>&1 &
+echo $! >/var/run/mt4/openbox.pid
+
 if [ -n "${CLOUDFLARE_TUNNEL_TOKEN:-}" ]; then
   : >/var/run/mt4/tunnel.requested
   # The token is passed only in the child environment, then dropped here.

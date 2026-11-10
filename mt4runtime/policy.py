@@ -36,20 +36,40 @@ def validate_setup_url(url: str, *, allow_unlisted_host: bool = False) -> str:
     return text
 
 
+class WrongTerminalError(Exception):
+    """The prefix has terminal64.exe and no MT4 terminal.exe."""
+
+    def __init__(self, path: str) -> None:
+        super().__init__(path)
+        self.path = path
+
+
 def find_terminal(prefix: str) -> str | None:
-    """Return the first terminal.exe under prefix, or None."""
+    """Return terminal.exe under prefix, or None when nothing is installed.
+
+    terminal64.exe is MetaTrader 5. If that is the only terminal, raise
+    WrongTerminalError with its path instead of treating the install as MT4.
+    """
     if not prefix or not prefix.strip():
         return None
     root = os.path.abspath(prefix)
     if not os.path.isdir(root):
         return None
-    found: list[str] = []
+    exe: list[str] = []
+    mt5: list[str] = []
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [name for name in dirnames if name != "dosdevices"]
         for name in filenames:
-            if name.lower() == "terminal.exe":
-                found.append(os.path.join(dirpath, name))
-    if not found:
-        return None
-    found.sort()
-    return found[0]
+            lowered = name.lower()
+            full = os.path.join(dirpath, name)
+            if lowered == "terminal.exe":
+                exe.append(full)
+            elif lowered == "terminal64.exe":
+                mt5.append(full)
+    if exe:
+        exe.sort()
+        return exe[0]
+    if mt5:
+        mt5.sort()
+        raise WrongTerminalError(mt5[0])
+    return None

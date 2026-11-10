@@ -7,7 +7,9 @@ installer from MetaQuotes and runs it under Wine. You accept the MetaQuotes
 license by that install. Broker logins stay on the machine, not in this
 repository.
 
-The image is linux/amd64. It publishes no ports. cloudflared starts only when
+The image is linux/amd64. Wine is pinned to 10.0 because Wine 11 makes
+the MetaQuotes installer report a debugger and stop. It publishes no
+ports. cloudflared starts only when
 `CLOUDFLARE_TUNNEL_TOKEN` is set, and it dials out.
 
 ## License
@@ -27,13 +29,19 @@ docker build -t mt4-runtime:local .
 docker compose up --build
 ```
 
+`docker compose` lifts Docker's default seccomp profile. Without that,
+`wineboot` exits at once with `wine: socket : Function not implemented`.
+A plain `docker run` needs the same flag: `--security-opt seccomp=unconfined`.
+
 Set `CLOUDFLARE_TUNNEL_TOKEN` in the environment when you want a tunnel.
 Leave it unset to run without one. The Wine prefix is the `mt4-prefix`
 volume. Delete that volume to remove the terminal.
 
-`MT4_SETUP_URL` defaults to the MetaQuotes Linux installer on
-`download.mql5.com`. Set `MT4_ALLOW_UNLISTED_SETUP_HOST=1` only when the
-installer host is somewhere else, and only for an https URL.
+`MT4_SETUP_URL` defaults to the MetaQuotes installer on
+`download.mql5.com`. That file is a GUI setup. Silent install flags do
+not apply. The container drives the setup window. Set
+`MT4_ALLOW_UNLISTED_SETUP_HOST=1` only when the installer host is
+somewhere else, and only for an https URL.
 
 ## Proof
 
