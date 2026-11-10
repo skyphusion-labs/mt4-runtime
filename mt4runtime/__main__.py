@@ -10,7 +10,9 @@ from mt4runtime.policy import (
     SetupUrlError,
     WrongTerminalError,
     find_terminal,
+    resolve_setup_sha256,
     validate_setup_url,
+    verify_setup_sha256,
 )
 
 
@@ -25,6 +27,11 @@ def main(argv: list[str] | None = None) -> int:
     find = sub.add_parser("find-terminal")
     find.add_argument("--prefix", required=True)
 
+    verify = sub.add_parser("verify-sha")
+    verify.add_argument("--url", required=True)
+    verify.add_argument("--actual", required=True)
+    verify.add_argument("--override", default="")
+
     args = parser.parse_args(argv)
     if args.cmd == "validate-url":
         try:
@@ -32,6 +39,16 @@ def main(argv: list[str] | None = None) -> int:
         except SetupUrlError as exc:
             print(str(exc), file=sys.stderr)
             return 2
+        return 0
+
+    if args.cmd == "verify-sha":
+        try:
+            expected = resolve_setup_sha256(args.url, args.override)
+            verify_setup_sha256(args.actual, expected)
+        except SetupUrlError as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
+        print(expected)
         return 0
 
     try:

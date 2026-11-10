@@ -11,10 +11,13 @@ from mt4runtime import __version__
 from mt4runtime.__main__ import main
 from mt4runtime.policy import (
     DEFAULT_SETUP_URL,
+    DEFAULT_SETUP_SHA256,
     SetupUrlError,
     WrongTerminalError,
     find_terminal,
+    resolve_setup_sha256,
     validate_setup_url,
+    verify_setup_sha256,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +25,35 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_version_matches_file():
     assert __version__ == (ROOT / "VERSION").read_text().strip()
+
+
+def test_default_url_uses_the_measured_pin():
+    assert resolve_setup_sha256(DEFAULT_SETUP_URL) == DEFAULT_SETUP_SHA256
+    verify_setup_sha256(DEFAULT_SETUP_SHA256, DEFAULT_SETUP_SHA256)
+
+
+def test_override_sha256_must_be_hex():
+    with pytest.raises(SetupUrlError):
+        resolve_setup_sha256(DEFAULT_SETUP_URL, "abc")
+    pinned = "ab" * 32
+    assert resolve_setup_sha256("https://example.com/a.exe", pinned.upper()) == pinned
+
+
+def test_non_default_url_requires_a_pin():
+    with pytest.raises(SetupUrlError):
+        resolve_setup_sha256("https://download.mql5.com/other.exe")
+
+
+def test_verify_sha256_reports_the_actual():
+    with pytest.raises(SetupUrlError) as caught:
+        verify_setup_sha256("aa" * 32, DEFAULT_SETUP_SHA256)
+    assert "aa" * 32 in str(caught.value)
+
+
+def test_cli_verify_sha(capsys: pytest.CaptureFixture[str]):
+    assert main(["verify-sha", "--url", DEFAULT_SETUP_URL, "--actual", DEFAULT_SETUP_SHA256]) == 0
+    assert DEFAULT_SETUP_SHA256 in capsys.readouterr().out
+    assert main(["verify-sha", "--url", "https://example.com/a.exe", "--actual", "ab" * 32]) == 2
 
 
 def test_default_url_is_metaquotes_https():

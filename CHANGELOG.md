@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+The default installer download is checked against a sha256 pin, not
+only a minimum size. A different URL has to bring MT4_SETUP_SHA256.
+The pin is the 2026-11-10 download of mt4oldsetup.exe, 4702512 bytes.
+
 ## 0.1.2
 
 The current MetaQuotes setup file is a GUI installer. Inno Setup silent

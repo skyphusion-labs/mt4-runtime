@@ -59,6 +59,15 @@ def test_compose_lifts_seccomp_for_wine():
     assert "seccomp=unconfined" in workflow
 
 
+def test_default_installer_sha256_is_pinned():
+    policy = (ROOT / "mt4runtime" / "policy.py").read_text()
+    script = (ROOT / "scripts" / "install-mt4.sh").read_text()
+    pin = "19b1a0dbe21a3cc5e38957105a869153fd29a677c1f992303dd96eb2ad18eabd"
+    assert pin in policy
+    assert "sha256sum" in script
+    assert "verify-sha" in script
+
+
 def test_install_does_not_use_inno_silent_flags():
     text = (ROOT / "scripts" / "install-mt4.sh").read_text()
     assert "VERYSILENT" not in text

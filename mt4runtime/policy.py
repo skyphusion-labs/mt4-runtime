@@ -9,6 +9,11 @@ from urllib.parse import urlparse
 DEFAULT_SETUP_URL = (
     "https://download.mql5.com/cdn/web/metaquotes.software.corp/mt4/mt4oldsetup.exe"
 )
+# Measured 2026-11-10. Two downloads of DEFAULT_SETUP_URL, 4702512 bytes,
+# both hashed with shasum -a 256 to this value.
+DEFAULT_SETUP_SHA256 = (
+    "19b1a0dbe21a3cc5e38957105a869153fd29a677c1f992303dd96eb2ad18eabd"
+)
 ALLOWED_HOSTS = frozenset({"download.mql5.com"})
 
 
@@ -34,6 +39,25 @@ def validate_setup_url(url: str, *, allow_unlisted_host: bool = False) -> str:
     if parsed.query or parsed.fragment:
         raise SetupUrlError("setup url must not carry a query or fragment")
     return text
+
+
+def resolve_setup_sha256(url: str, override: str = "") -> str:
+    """Return the sha256 the downloaded installer must match."""
+    text = override.strip().lower()
+    if text:
+        if len(text) != 64 or any(char not in "0123456789abcdef" for char in text):
+            raise SetupUrlError("setup sha256 must be 64 hex characters")
+        return text
+    if url == DEFAULT_SETUP_URL:
+        return DEFAULT_SETUP_SHA256
+    raise SetupUrlError("a non-default setup url requires MT4_SETUP_SHA256")
+
+
+def verify_setup_sha256(actual: str, expected: str) -> None:
+    """Raise SetupUrlError when the downloaded bytes are not the pinned ones."""
+    got = actual.strip().lower()
+    if got != expected:
+        raise SetupUrlError(f"installer sha256 is {got}")
 
 
 class WrongTerminalError(Exception):
