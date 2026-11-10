@@ -27,6 +27,10 @@ docker build -t mt4-runtime:local .
 docker compose up --build
 ```
 
+`docker compose` lifts Docker's default seccomp profile. Without that,
+`wineboot` exits at once with `wine: socket : Function not implemented`.
+A plain `docker run` needs the same flag: `--security-opt seccomp=unconfined`.
+
 Set `CLOUDFLARE_TUNNEL_TOKEN` in the environment when you want a tunnel.
 Leave it unset to run without one. The Wine prefix is the `mt4-prefix`
 volume. Delete that volume to remove the terminal.

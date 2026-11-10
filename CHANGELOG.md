@@ -5,7 +5,8 @@
 The current MetaQuotes setup file is a GUI installer. Inno Setup silent
 flags do not apply, so the run waited until the task timed out.
 The container now bounds Wine startup and drives the setup window.
-It looks for terminal.exe and terminal64.exe.
+It looks for terminal.exe and terminal64.exe. Docker's default seccomp
+profile blocks Wine's server socket, so compose and CI lift it.
 
 ## 0.1.1
 

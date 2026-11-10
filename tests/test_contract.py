@@ -50,6 +50,13 @@ def test_cloudflared_pin_is_a_sha256():
     ) in dockerfile
 
 
+def test_compose_lifts_seccomp_for_wine():
+    compose = (ROOT / "docker-compose.yml").read_text()
+    workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text()
+    assert "seccomp:unconfined" in compose
+    assert "seccomp=unconfined" in workflow
+
+
 def test_install_does_not_use_inno_silent_flags():
     text = (ROOT / "scripts" / "install-mt4.sh").read_text()
     assert "VERYSILENT" not in text
