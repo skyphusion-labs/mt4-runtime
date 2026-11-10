@@ -37,7 +37,10 @@ def validate_setup_url(url: str, *, allow_unlisted_host: bool = False) -> str:
 
 
 def find_terminal(prefix: str) -> str | None:
-    """Return the first terminal.exe under prefix, or None."""
+    """Return the installed terminal executable under prefix, or None.
+
+    Prefer terminal.exe. Accept terminal64.exe when that is the only one.
+    """
     if not prefix or not prefix.strip():
         return None
     root = os.path.abspath(prefix)
@@ -47,9 +50,15 @@ def find_terminal(prefix: str) -> str | None:
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames[:] = [name for name in dirnames if name != "dosdevices"]
         for name in filenames:
-            if name.lower() == "terminal.exe":
+            lowered = name.lower()
+            if lowered in ("terminal.exe", "terminal64.exe"):
                 found.append(os.path.join(dirpath, name))
     if not found:
         return None
-    found.sort()
+
+    def rank(path: str) -> tuple[int, str]:
+        base = os.path.basename(path).lower()
+        return (0 if base == "terminal.exe" else 1, path)
+
+    found.sort(key=rank)
     return found[0]

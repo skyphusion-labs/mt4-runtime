@@ -36,6 +36,7 @@ def test_image_does_not_vendor_the_terminal():
     dockerfile = (ROOT / "Dockerfile").read_text().lower()
     assert "winehq-stable" in dockerfile
     assert "cloudflared" in dockerfile
+    assert "xdotool" in dockerfile
     for banned in ("mt4oldsetup", "mt4setup.exe", "terminal.exe", "mql5.com"):
         assert banned not in dockerfile
 
@@ -47,6 +48,13 @@ def test_cloudflared_pin_is_a_sha256():
         "ARG CLOUDFLARED_SHA256="
         "1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872"
     ) in dockerfile
+
+
+def test_install_does_not_use_inno_silent_flags():
+    text = (ROOT / "scripts" / "install-mt4.sh").read_text()
+    assert "VERYSILENT" not in text
+    assert "timeout 90 wineboot" in text
+    assert "xdotool" in text
 
 
 def test_entrypoint_does_not_print_the_tunnel_token():

@@ -86,6 +86,21 @@ def test_find_terminal_ignores_dosdevices_symlink(tmp_path: Path):
     assert "dosdevices" not in found
 
 
+def test_find_terminal_prefers_terminal_exe(tmp_path: Path):
+    folder = tmp_path / "MetaTrader 4"
+    folder.mkdir()
+    (folder / "terminal64.exe").write_bytes(b"64")
+    (folder / "terminal.exe").write_bytes(b"32")
+    assert find_terminal(str(tmp_path)).endswith("terminal.exe")
+
+
+def test_find_terminal_accepts_terminal64(tmp_path: Path):
+    folder = tmp_path / "MetaTrader 4"
+    folder.mkdir()
+    (folder / "terminal64.exe").write_bytes(b"64")
+    assert find_terminal(str(tmp_path)).endswith("terminal64.exe")
+
+
 def test_find_terminal_missing(tmp_path: Path):
     assert find_terminal(str(tmp_path)) is None
     assert find_terminal("") is None

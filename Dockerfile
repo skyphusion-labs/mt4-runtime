@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-ARG VERSION=0.1.1
+ARG VERSION=0.1.2
 ARG CLOUDFLARED_VERSION=2026.10.7
 ARG CLOUDFLARED_SHA256=1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872
 
@@ -30,6 +30,7 @@ RUN apt-get update \
         procps \
         python3 \
         tini \
+        xdotool \
         fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 

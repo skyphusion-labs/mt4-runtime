@@ -31,9 +31,11 @@ Set `CLOUDFLARE_TUNNEL_TOKEN` in the environment when you want a tunnel.
 Leave it unset to run without one. The Wine prefix is the `mt4-prefix`
 volume. Delete that volume to remove the terminal.
 
-`MT4_SETUP_URL` defaults to the MetaQuotes Linux installer on
-`download.mql5.com`. Set `MT4_ALLOW_UNLISTED_SETUP_HOST=1` only when the
-installer host is somewhere else, and only for an https URL.
+`MT4_SETUP_URL` defaults to the MetaQuotes installer on
+`download.mql5.com`. That file is a GUI setup. Silent install flags do
+not apply. The container drives the setup window. Set
+`MT4_ALLOW_UNLISTED_SETUP_HOST=1` only when the installer host is
+somewhere else, and only for an https URL.
 
 ## Proof
 

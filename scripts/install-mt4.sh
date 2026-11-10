@@ -54,23 +54,70 @@ if [ "$size" -lt 100000 ]; then
   exit 1
 fi
 
-if [ ! -f "$PREFIX/system.reg" ]; then
-  wineboot --init
-  wineserver --wait
-fi
-winecfg -v=win10
-wineserver --wait || true
-
 log="${HOME:-/tmp}/log/install.log"
-wine "$installer" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- >"$log" 2>&1 || true
-wineserver --wait || true
+: >"$log"
 
-found=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" || true)
-if [ -z "$found" ]; then
-  echo "terminal.exe was not installed" >&2
-  if [ -f "$log" ]; then
-    tail -n 80 "$log" >&2
+# winecfg is a GUI and it waits forever under Xvfb. Set the version in
+# the registry after a bounded wineboot instead.
+if ! timeout 90 wineboot --init >>"$log" 2>&1; then
+  echo "wineboot did not finish" >&2
+  tail -n 40 "$log" >&2 || true
+  wineserver -k >/dev/null 2>&1 || true
+  exit 1
+fi
+wineserver --wait >>"$log" 2>&1 || true
+timeout 20 wine reg add 'HKCU\Software\Wine' /v Version /t REG_SZ /d win10 /f >>"$log" 2>&1 || true
+
+# The MetaQuotes file is a GUI setup. Silent Inno flags are ignored and
+# the window waits forever. Drive the visible window until a terminal exists.
+wine "$installer" >>"$log" 2>&1 &
+wine_pid=$!
+
+nudge() {
+  ids=$(xdotool search --onlyvisible --name "MetaTrader" 2>/dev/null || true)
+  if [ -z "$ids" ]; then
+    ids=$(xdotool search --onlyvisible --name "Setup" 2>/dev/null || true)
   fi
+  if [ -z "$ids" ]; then
+    return 0
+  fi
+  id=$(printf '%s\n' $ids | head -n 1)
+  case "$1" in
+    0) key=space ;;
+    1) key=alt+a ;;
+    2) key=alt+n ;;
+    3) key=alt+i ;;
+    *) key=Return ;;
+  esac
+  xdotool windowactivate --sync "$id" key --delay 40 "$key" >/dev/null 2>&1 || true
+}
+
+i=0
+found=""
+while [ "$i" -lt 160 ]; do
+  found=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" || true)
+  if [ -n "$found" ]; then
+    break
+  fi
+  if [ $((i % 5)) -eq 0 ]; then
+    echo "install wait $i" >&2
+    xwininfo -root -tree 2>/dev/null | awk 'length($0) < 220 && /"[^"]+"/ {print}' | head -n 12 >&2 || true
+    tail -n 4 "$log" >&2 || true
+  fi
+  nudge $((i % 5))
+  i=$((i + 1))
+  sleep 3
+done
+
+wineserver -k >/dev/null 2>&1 || true
+kill "$wine_pid" >/dev/null 2>&1 || true
+
+if [ -z "$found" ]; then
+  found=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" || true)
+fi
+if [ -z "$found" ]; then
+  echo "terminal was not installed" >&2
+  tail -n 80 "$log" >&2 || true
   exit 1
 fi
 printf '%s\n' "$found"

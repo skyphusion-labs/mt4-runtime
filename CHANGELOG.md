@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+The current MetaQuotes setup file is a GUI installer. Inno Setup silent
+flags do not apply, so the run waited until the task timed out.
+The container now bounds Wine startup and drives the setup window.
+It looks for terminal.exe and terminal64.exe.
+
 ## 0.1.1
 
 The Ubuntu 24.04 base image already has a user at uid 1000. Remove that
