@@ -45,7 +45,7 @@ export WINEDEBUG="${WINEDEBUG:--all}"
 export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-mscoree,mshtml=}"
 mkdir -p "$PREFIX" "${HOME:-/tmp}/log"
 
-installer="${HOME:-/tmp}/mt4setup.exe"
+installer=$(mktemp)
 trap 'rm -f "$installer"' EXIT
 curl --proto '=https' --tlsv1.2 -fL --retry 3 --retry-delay 2 -o "$installer" "$URL"
 chmod 700 "$installer"
@@ -89,6 +89,7 @@ nudge() {
   if [ -z "$id" ]; then
     return 0
   fi
+  echo "click $id" >&2
   xdotool windowactivate --sync "$id" key --delay 30 Return space alt+n >/dev/null 2>&1 || true
   xdotool mousemove --window "$id" 230 78 click 1 >/dev/null 2>&1 || true
   xdotool mousemove --window "$id" 156 78 click 1 >/dev/null 2>&1 || true
@@ -102,7 +103,11 @@ while [ "$i" -lt 160 ]; do
     break
   fi
   if [ $((i % 5)) -eq 0 ]; then
-    echo "install wait $i" >&2
+    if kill -0 "$wine_pid" 2>/dev/null; then
+      echo "install wait $i wine=$wine_pid" >&2
+    else
+      echo "install wait $i wine exited" >&2
+    fi
     xwininfo -root -tree 2>/dev/null | awk 'length($0) < 220 && /"[^"]+"/ {print}' | head -n 12 >&2 || true
     tail -n 4 "$log" >&2 || true
   fi
