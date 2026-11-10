@@ -90,9 +90,11 @@ nudge() {
     return 0
   fi
   echo "click $id" >&2
-  xdotool windowactivate --sync "$id" key --delay 30 Return space alt+n >/dev/null 2>&1 || true
-  xdotool mousemove --window "$id" 230 78 click 1 >/dev/null 2>&1 || true
-  xdotool mousemove --window "$id" 156 78 click 1 >/dev/null 2>&1 || true
+  xdotool getwindowname "$id" >&2 || true
+  xwininfo -id "$id" >&2 || true
+  # Do not send Return. On this dialog it is the button that closes the setup.
+  xdotool windowactivate --sync "$id" >/dev/null 2>&1 || true
+  xdotool mousemove --window "$id" 250 80 click 1 >/dev/null 2>&1 || true
 }
 
 i=0
@@ -100,6 +102,10 @@ found=""
 while [ "$i" -lt 160 ]; do
   found=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" 2>/dev/null || true)
   if [ -n "$found" ]; then
+    break
+  fi
+  if ! kill -0 "$wine_pid" 2>/dev/null; then
+    echo "installer process exited" >&2
     break
   fi
   if [ $((i % 5)) -eq 0 ]; then
