@@ -45,9 +45,10 @@ export WINEDEBUG="${WINEDEBUG:--all}"
 export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-mscoree,mshtml=}"
 mkdir -p "$PREFIX" "${HOME:-/tmp}/log"
 
-installer=$(mktemp)
+installer="${HOME:-/tmp}/mt4setup.exe"
 trap 'rm -f "$installer"' EXIT
 curl --proto '=https' --tlsv1.2 -fL --retry 3 --retry-delay 2 -o "$installer" "$URL"
+chmod 700 "$installer"
 size=$(wc -c < "$installer" | tr -d ' ')
 if [ "$size" -lt 100000 ]; then
   echo "installer download is too small" >&2
@@ -73,29 +74,30 @@ timeout 20 wine reg add 'HKCU\Software\Wine' /v Version /t REG_SZ /d win10 /f >>
 wine "$installer" >>"$log" 2>&1 &
 wine_pid=$!
 
+# The setup window title is the exe name, not "MetaTrader", until the
+# real wizard paints. Pick the first sized window that is not Explorer.
 nudge() {
-  ids=$(xdotool search --onlyvisible --name "MetaTrader" 2>/dev/null || true)
-  if [ -z "$ids" ]; then
-    ids=$(xdotool search --onlyvisible --name "Setup" 2>/dev/null || true)
-  fi
-  if [ -z "$ids" ]; then
+  id=$(xwininfo -root -tree 2>/dev/null | awk '
+    /explorer\.exe/ { next }
+    /Default IME/ { next }
+    /has no name/ { next }
+    /[0-9][0-9][0-9]x/ {
+      print $1
+      exit
+    }
+  ')
+  if [ -z "$id" ]; then
     return 0
   fi
-  id=$(printf '%s\n' $ids | head -n 1)
-  case "$1" in
-    0) key=space ;;
-    1) key=alt+a ;;
-    2) key=alt+n ;;
-    3) key=alt+i ;;
-    *) key=Return ;;
-  esac
-  xdotool windowactivate --sync "$id" key --delay 40 "$key" >/dev/null 2>&1 || true
+  xdotool windowactivate --sync "$id" key --delay 30 Return space alt+n >/dev/null 2>&1 || true
+  xdotool mousemove --window "$id" 230 78 click 1 >/dev/null 2>&1 || true
+  xdotool mousemove --window "$id" 156 78 click 1 >/dev/null 2>&1 || true
 }
 
 i=0
 found=""
 while [ "$i" -lt 160 ]; do
-  found=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" || true)
+  found=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" 2>/dev/null || true)
   if [ -n "$found" ]; then
     break
   fi
@@ -104,7 +106,7 @@ while [ "$i" -lt 160 ]; do
     xwininfo -root -tree 2>/dev/null | awk 'length($0) < 220 && /"[^"]+"/ {print}' | head -n 12 >&2 || true
     tail -n 4 "$log" >&2 || true
   fi
-  nudge $((i % 5))
+  nudge
   i=$((i + 1))
   sleep 3
 done
