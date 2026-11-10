@@ -41,8 +41,12 @@ if [ -z "${DISPLAY:-}" ]; then
 fi
 
 export WINEPREFIX="$PREFIX"
-export WINEDEBUG="${WINEDEBUG:--all}"
 export WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-mscoree,mshtml=}"
+# Unset before wineboot. The installer treats a wineserver that was
+# started with WINEDEBUG set as a debugger, even when the setup
+# process itself does not have the variable.
+unset WINEDEBUG
+wineserver -k >/dev/null 2>&1 || true
 mkdir -p "$PREFIX" "${HOME:-/tmp}/log"
 
 installer=$(mktemp)
