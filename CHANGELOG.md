@@ -7,7 +7,10 @@ flags do not apply, so the run waited until the task timed out.
 The container now bounds Wine startup and drives the setup window.
 Wine 11 trips that installer's debugger check. The image pins
 WineHQ stable at 10.0.0.0.
-It looks for terminal.exe and terminal64.exe. Docker's default seccomp
+It looks for terminal.exe only. A lone terminal64.exe is refused.
+After terminal.exe appears, the installer is left running until it
+exits, or until the file count in its directory stays the same for
+15 seconds. Docker's default seccomp
 profile blocks Wine's server socket, so compose and CI lift it.
 
 ## 0.1.1

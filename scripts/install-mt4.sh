@@ -110,19 +110,56 @@ nudge() {
   timeout 5 xdotool mousemove --window "$id" 250 80 click --window "$id" 1 >/dev/null 2>&1 || true
 }
 
+probe_terminal() {
+  probe_err=$(mktemp)
+  probe_status=0
+  probe_path=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" 2>"$probe_err") || probe_status=$?
+  if [ "$probe_status" -eq 3 ]; then
+    cat "$probe_err" >&2
+    rm -f "$probe_err"
+    wineserver -k >/dev/null 2>&1 || true
+    exit 1
+  fi
+  rm -f "$probe_err"
+}
+
 i=0
 found=""
+last_count=""
+settled=0
 while [ "$i" -lt 160 ]; do
-  found=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" 2>/dev/null || true)
-  if [ -n "$found" ]; then
-    break
+  probe_terminal
+  if [ -n "$probe_path" ]; then
+    found=$probe_path
   fi
-  if ! kill -0 "$wine_pid" 2>/dev/null; then
+  alive=0
+  if kill -0 "$wine_pid" 2>/dev/null; then
+    alive=1
+  fi
+  if [ -n "$found" ]; then
+    if [ "$alive" -eq 0 ]; then
+      echo "installer process exited" >&2
+      break
+    fi
+    install_dir=$(dirname "$found")
+    now=$(find "$install_dir" -type f 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$now" = "$last_count" ]; then
+      settled=$((settled + 1))
+    else
+      settled=0
+      last_count=$now
+    fi
+    # Five unchanged polls at 3 seconds is 15 seconds.
+    if [ "$settled" -ge 5 ]; then
+      echo "install tree stable at $now files" >&2
+      break
+    fi
+  elif [ "$alive" -eq 0 ]; then
     echo "installer process exited" >&2
     break
   fi
   if [ $((i % 5)) -eq 0 ]; then
-    if kill -0 "$wine_pid" 2>/dev/null; then
+    if [ "$alive" -eq 1 ]; then
       echo "install wait $i wine=$wine_pid" >&2
     else
       echo "install wait $i wine exited" >&2
@@ -136,10 +173,10 @@ while [ "$i" -lt 160 ]; do
 done
 
 wineserver -k >/dev/null 2>&1 || true
-kill "$wine_pid" >/dev/null 2>&1 || true
 
 if [ -z "$found" ]; then
-  found=$(python3 -m mt4runtime find-terminal --prefix "$PREFIX" || true)
+  probe_terminal
+  found=$probe_path
 fi
 if [ -z "$found" ]; then
   echo "terminal was not installed" >&2
