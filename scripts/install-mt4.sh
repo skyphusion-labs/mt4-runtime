@@ -70,9 +70,18 @@ wineserver --wait >>"$log" 2>&1 || true
 timeout 20 wine reg add 'HKCU\Software\Wine' /v Version /t REG_SZ /d win10 /f >>"$log" 2>&1 || true
 
 # The MetaQuotes file is a GUI setup. Silent Inno flags are ignored and
-# the window waits forever. A set WINEDEBUG makes this installer report
-# "a debugger has been found" and refuse to continue.
+# the window waits forever. The installer reads AeDebug and stops with
+# "a debugger has been found" when that value names winedbg. Clear it,
+# and do not pass WINEDEBUG into the setup process.
 # Drive the visible window until a terminal exists.
+for view in 32 64; do
+  env -u WINEDEBUG wine reg add \
+    'HKLM\Software\Microsoft\Windows NT\CurrentVersion\AeDebug' \
+    /v Auto /t REG_SZ /d 0 /f /reg:"$view" >>"$log" 2>&1 || true
+  env -u WINEDEBUG wine reg delete \
+    'HKLM\Software\Microsoft\Windows NT\CurrentVersion\AeDebug' \
+    /v Debugger /f /reg:"$view" >>"$log" 2>&1 || true
+done
 env -u WINEDEBUG wine "$installer" >>"$log" 2>&1 &
 wine_pid=$!
 
