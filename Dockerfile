@@ -1,6 +1,6 @@
 FROM ubuntu:24.04
 
-ARG VERSION=0.1.0
+ARG VERSION=0.1.1
 ARG CLOUDFLARED_VERSION=2026.10.7
 ARG CLOUDFLARED_SHA256=1f99fb518b83dec2ba8d870a7cc991d82a77e6196295a3d2754ba17ab9f91872
 
@@ -48,7 +48,10 @@ RUN curl -fsSL -o /tmp/cloudflared \
     && rm -f /tmp/cloudflared \
     && cloudflared --version
 
-RUN useradd --create-home --shell /bin/bash --uid 1000 trader \
+# Ubuntu 24.04 images already have a user at uid 1000. useradd exits 4
+# when that uid is taken, so remove it before creating trader.
+RUN if getent passwd ubuntu >/dev/null; then userdel -r ubuntu; fi \
+    && useradd --create-home --shell /bin/bash --uid 1000 --user-group trader \
     && mkdir -p /opt/mt4-runtime /home/trader/.mt4 /home/trader/log /var/run/mt4 \
     && chown -R trader:trader /home/trader /var/run/mt4 /opt/mt4-runtime
 
