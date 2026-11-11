@@ -5,10 +5,11 @@ services:
     build:
       context: .
     image: mt4-runtime:local
-    # Wine's server socket is blocked by Docker's default seccomp profile
-    # (ENOSYS). The profile has to be lifted or wineboot exits immediately.
+    # Docker's default profile returns ENOSYS for clone3 and blocks
+    # AF_ALG. Wine treats that as a fatal socket error. seccomp/wine.json
+    # is the default profile plus those two allows.
     security_opt:
-      - seccomp:unconfined
+      - seccomp:seccomp/wine.json
     environment:
       CLOUDFLARE_TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
       MT4_SETUP_URL: ${MT4_SETUP_URL:-}

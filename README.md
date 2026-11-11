@@ -32,9 +32,11 @@ docker build -t mt4-runtime:local .
 docker compose up --build
 ```
 
-`docker compose` lifts Docker's default seccomp profile. Without that,
-`wineboot` exits at once with `wine: socket : Function not implemented`.
-A plain `docker run` needs the same flag: `--security-opt seccomp=unconfined`.
+`docker compose` uses `seccomp/wine.json`. That is Docker's default
+profile plus two allows: `clone3`, and `socket` for `AF_ALG` (38).
+Without those, `wineboot` exits at once with
+`wine: socket : Function not implemented`. A plain `docker run` needs
+`--security-opt seccomp=seccomp/wine.json`.
 
 Set `CLOUDFLARE_TUNNEL_TOKEN` in the environment when you want a tunnel.
 Leave it unset to run without one. The Wine prefix is the `mt4-prefix`
